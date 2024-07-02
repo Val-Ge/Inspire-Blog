@@ -1,1 +1,20 @@
-<%-include('../layouts/boilerplate')%>
+<%-include('../partials/navbar')%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register</title>
+</head>
+<body>
+  <h1>Register</h1>
+  <form action="/users/register" method="POST">
+    <label>Email:</label>
+    <input type="email" name="email" required><br>
+    <label>Password:</label>
+    <input type="password" name="password" required><br>
+    <button type="submit">Register</button>
+  </form>
+</body>
+</html>
+<%-include('../partials/footer')%>
