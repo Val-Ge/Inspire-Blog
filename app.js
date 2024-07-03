@@ -72,6 +72,11 @@ app.use((req, res, next) => {
   res.locals.messages = req.flash();
   next();
 });
+
+//Define routes with Router
+const userRouter = require('./routes/user');
+app.use('/', userRouter);
+
 // Define routes
 app.get('/', (req, res) => {
   res.render('index', { title: 'Home' });

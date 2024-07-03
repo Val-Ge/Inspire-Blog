@@ -1,3 +1,19 @@
+const express = require('express');
+const router = express.Router();
+const User = require('../models/user');
+
+//render password reset request form
+router.get('/forgot', (req, res) => {
+    res.render('users/forgot', {title: 'Forgot password'});
+});
+
+//render password reset form
+router.get('/reset/:token', (req, res) => {
+    res.render('users/reset', {title: 'Reset password', token: req.params.token });
+});
+
+module.exports = router;
+
 // const express = require('express');
 // const router = express.Router();
 // // const passport = require('passport');
@@ -15,4 +31,3 @@
 
 // router.get('/logout', users.logout)
 
-// module.exports = router;

@@ -1,0 +1,15 @@
+<%-include('../layouts/boilerplate')%>
+<%-include('../partials/navbar')%>
+
+<body>
+<h1> Reset Password</h1>
+<form action="/reset/<%= token %>" method="post">
+    <label for="password">New Password:</label>
+    <input type="password" id="password" name="password" required>
+    <label for="confirm">Conform Password:</label>
+    <input type="password" id="conform" name="confirm" required>
+    <button type="submit">Reset Password</button>
+</form>
+</body>
+
+<%-include('../partials/footer')%>
