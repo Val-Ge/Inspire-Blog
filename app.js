@@ -15,7 +15,7 @@ const app = express();
 const port = 3000;
 
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/your-database-name', {
+mongoose.connect('mongodb://localhost:27017/Inspire', {
     useNewUrlParser: true,
     useUnifiedTopology: true
   })
@@ -45,6 +45,7 @@ app.use(session({
 
 //Flash middleware
 app.use(flash());
+
 //Initialize Passport and Session
 app.use(passport.initialize());
 app.use(passport.session());
@@ -66,10 +67,11 @@ app.set('layout', 'layouts/boilerplate'); // Specify the default layout file
 // Static files middleware (for serving CSS, JS, images, etc.)
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, 'public')));
-
-
-
-
+// Middleware to pass flash messages to all views
+app.use((req, res, next) => {
+  res.locals.messages = req.flash();
+  next();
+});
 // Define routes
 app.get('/', (req, res) => {
   res.render('index', { title: 'Home' });
@@ -88,16 +90,8 @@ app.get('/contact', (req, res) => {
   });
 
 app.get('/login', (req, res) => {
-    res.render('users/login', { title: 'Login' });
+    res.render('users/login', { title: 'Login', message: req.flash('error') });
   });
-
-  // Handle POST request for login
-app.post('/users/login', (req, res) => {
-  const { email, password } = req.body;
-  // Add your login logic here
-  res.send(`Email: ${email}, Password: ${password}`);
-});
-
 
   app.get('/register', (req, res) => {
     res.render('users/register', { title: 'Register' });
@@ -106,10 +100,10 @@ app.post('/users/login', (req, res) => {
 
 
 app.post('/users/register', (req, res) => {
-    const { email, password } = req.body;
+    const { username, email, password } = req.body;
     bcrypt.hash(password, 10, (err, hashedPassword) => {
         if (err) throw err;
-        const newUser = new User({ email, password: hashedPassword });
+        const newUser = new User({ username, email, password: hashedPassword });
         newUser.save()
         .then(user => {
             res.redirect('/login');
@@ -118,24 +112,14 @@ app.post('/users/register', (req, res) => {
     });
 });
 
-app.post('/login', passport.authenticate('local', {
+ // Handle POST request for login using Passport authentication
+app.post('/users/login', passport.authenticate('local', {
     successRedirect: '/dashboard',
     failureRedirect: '/login',
     failureFlash: true
 }));
 
-app.get('/logout', (req, res) => {
-    req.logout((err) => {
-      if (err) {
-        console.log(err);
-        return next(err);
-      }
-    
-    res.redirect('/');
-    });
-});
-
-// Ensure user is authenticated
+/// Ensure user is authenticated
 function ensureAuthenticated(req, res, next) {
     if (req.isAuthenticated()) {
         return next();
@@ -143,10 +127,21 @@ function ensureAuthenticated(req, res, next) {
     res.redirect('/login');
 }
 
-// protected route
-// app.get('/dashboard', ensureAuthenticated, (req, res) => {
-//     res.render('dashboard', { user: req.user });
-// });
+//protected route
+app.get('/dashboard', ensureAuthenticated, (req, res) => {
+    res.render('dashboard', { user: req.user });
+});
+// Logout route
+app.get('/logout', (req, res) => {
+  req.logout((err) => {
+      if (err) {
+          console.log(err);
+          return next(err);
+      }
+      req.flash('success_msg', 'You have logged out');
+      res.redirect('/');
+  });
+});
 // Start the server
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);

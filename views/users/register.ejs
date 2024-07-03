@@ -1,4 +1,4 @@
-<%-include('../partials/navbar')%>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,6 +9,8 @@
 <body>
   <h1>Register</h1>
   <form action="/users/register" method="POST">
+    <label>Username:</label>
+    <input type="text" name="username" required><br>
     <label>Email:</label>
     <input type="email" name="email" required><br>
     <label>Password:</label>
@@ -17,4 +19,3 @@
   </form>
 </body>
 </html>
-<%-include('../partials/footer')%>
