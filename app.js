@@ -5,6 +5,7 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcryptjs');
 const User = require('./models/user');
+const postRoutes = require('./routes/posts')
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 
@@ -52,7 +53,9 @@ app.use(passport.session());
 
 
 // Passport local strategy for username/password authentication
-passport.use(User.createStrategy());  
+// passport.use(User.createStrategy());  
+passport.use(new LocalStrategy(User.authenticate()));
+
 //serialize user into session
 passport.serializeUser(User.serializeUser());
 
@@ -70,60 +73,58 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Middleware to pass flash messages to all views
 app.use((req, res, next) => {
   res.locals.messages = req.flash();
+  res.locals.error_msg = req.flash('error_msg'); // added
+  res.locals.error = req.flash('error'); //added
   next();
 });
+
+//Routes
+app.use(postRoutes);
 
 //Define routes with Router
 const userRouter = require('./routes/user');
 app.use('/', userRouter);
+
+const blogRouter = require('./routes/blog');
+app.use('/', blogRouter);
+
+const postRouter = require('./routes/posts');
+app.use('/', postRouter);
 
 // Define routes
 app.get('/', (req, res) => {
   res.render('index', { title: 'Home' });
 });
 
-app.get('/about', (req, res) => {
-    res.render('blog/about', { title: 'About Us' });
-  });
-
-app.get('/posts', (req, res) => {
-    res.render('posts/posts', { title: 'Blog Posts' });
-  });
-
-app.get('/contact', (req, res) => {
-    res.render('blog/contact', { title: 'Contact Us' });
-  });
-
-app.get('/login', (req, res) => {
-    res.render('users/login', { title: 'Login', message: req.flash('error') });
-  });
-
-  app.get('/register', (req, res) => {
-    res.render('users/register', { title: 'Register' });
-  });
-
-
-
-app.post('/users/register', (req, res) => {
-    const { username, email, password } = req.body;
-    bcrypt.hash(password, 10, (err, hashedPassword) => {
-        if (err) throw err;
-        const newUser = new User({ username, email, password: hashedPassword });
-        newUser.save()
-        .then(user => {
-            res.redirect('/login');
-        })
-        .catch(err => console.log(err));
-    });
-});
 
  // Handle POST request for login using Passport authentication
-app.post('/users/login', passport.authenticate('local', {
-    successRedirect: '/dashboard',
-    failureRedirect: '/login',
-    failureFlash: true
-}));
+// app.post('/users/login', passport.authenticate('local', {
+//     successRedirect: '/dashboard',
+//     failureRedirect: '/login',
+//     failureFlash: true
+// }));
 
+//the above was changed and add below
+app.post('/users/login', (req, res, next) => {
+  passport.authenticate('local', (err, user, info) => {
+    if (err) {
+      console.log("Authentication error: ", err);
+      return next(err);
+    }
+    if (!user) {
+      req.flash('error_msg', 'Invalid username or password');
+      return res.redirect('/login');
+    }
+    req.logIn(user, (err) => {
+      if (err) {
+        console.log("Login error: ", err);
+        return next(err);
+      }
+      console.log("Authenticated and logged in user: ", user);
+      return res.redirect('/dashboard');
+    });
+  })(req, res, next);
+});
 /// Ensure user is authenticated
 function ensureAuthenticated(req, res, next) {
     if (req.isAuthenticated()) {
@@ -147,6 +148,8 @@ app.get('/logout', (req, res) => {
       res.redirect('/');
   });
 });
+
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);

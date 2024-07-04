@@ -1,6 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');  // Add this line to require bcryptjs
 const User = require('../models/user');
+
+router.get('/register', (req, res) => {
+    res.render('users/register', { title: 'Register' });
+  });
 
 //render password reset request form
 router.get('/forgot', (req, res) => {
@@ -12,22 +17,25 @@ router.get('/reset/:token', (req, res) => {
     res.render('users/reset', {title: 'Reset password', token: req.params.token });
 });
 
+router.get('/login', (req, res) => {
+    res.render('users/login', { title: 'Login', message: req.flash('error') });
+  });
+
+router.post('/users/register', (req, res) => {
+    const { username, email, password } = req.body;
+    bcrypt.hash(password, 10, (err, hashedPassword) => {
+        if (err) throw err;
+        const newUser = new User({ username, email, password: hashedPassword });
+        newUser.save()
+        .then(user => {
+            res.redirect('/login');
+        })
+        .catch(err => console.log(err));
+    });
+});
+
+
 module.exports = router;
 
-// const express = require('express');
-// const router = express.Router();
-// // const passport = require('passport');
-// // const catchAsync = require('../utils/catchAsync');
-// // const User = require('../models/user');
-// // const users = require('../controllers/users');
 
-// router.route('/register')
-//     .get(users.renderRegister)
-//     .post(catchAsync(users.register));
-
-// router.route('/login')
-//     .get(users.renderLogin)
-//     .post(passport.authenticate('local', { failureFlash: true, failureRedirect: '/login' }), users.login)
-
-// router.get('/logout', users.logout)
 
