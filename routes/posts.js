@@ -6,7 +6,7 @@ const router = express.Router();
 //route to list all post
 router.get('/posts', async (req, res) => {
   try {
-    const posts = await postController.getAllPosts(req, res, false); // pass false to prevent sending json response
+    const posts = await this.post.find() // pass false to prevent sending json response
     res.render('index', { posts }); //render index.ejs and pass the posts to it 
   } catch (error) {
     res.status(500).send(error);
@@ -18,7 +18,7 @@ router.get('/posts', async (req, res) => {
 //route to view a single post
 router.get('/show/:id', async (req, res) => {
   try {
-    const post = await postController.getPostById(req, res);
+    const post = await this.post.findById(req, res);
     if (!post) {
       return res.status(404).send('Post not found');
     }
@@ -36,7 +36,7 @@ router.get('/new', (req, res) => {
 //route to render form for editing a post
 router.get('/edit/:id', async (req, res) => {
   try {
-    const post = await postController.getPostById(req, res);
+    const post = await post.findById;
 if(!post) {
   return res.status(404).send('Post not found');
 }  
@@ -47,13 +47,44 @@ res.render('edit', { post }); //render edit.ejs and pass the post to it
 });
 
 //route to handle creating a new post
-router.post('/posts', postController.new);
+router.post('/posts', async (req, res) => {
+  try {
+    const post = new post({
+      title: req.body.title,
+      content: req.body.content
+    });
+    await post.save();
+    res.status(201).send(post);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
 
 //route to handle updating a post
-router.patch('/posts/:id', postController.edit);
+router.patch('/posts/:id', async (req, res) => {
+  try {
+    const post = await post.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!post) {
+      return res.status(404).send();
+    }
+    res.status(200).send(post);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
 
 //rooute to handle deleting a post
-router.delete('/posts/:id', postController.deletePost);
+router.delete('/posts/:id', async (req, res) => {
+  try {
+    const post = await post.findByIdAndDelete(req.params.id);
+    if (!post) {
+      return res.status(404).send();
+    }
+    res.status(200).send(post);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
 
 
 // router.get('/posts', (req, res) => {

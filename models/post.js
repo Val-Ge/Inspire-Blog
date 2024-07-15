@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
-const postSchema = new mongoose.Schema({
-    title: {
-        type: String,
-        required: true
-    },
-    content: {
-        type: String,
+const Schema = mongoose.Schema;
+const postSchema = new Schema({
+    title: String,
+    content: String,
+    author: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
     },
     createdAt: {
         type: Date,
@@ -15,12 +15,14 @@ const postSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     }
-})
-
-postSchema.pre('save', function(next){
-    this.updatedAt = Date.now();
-    next();
 });
 
-const Post = mongoose.model('Post', postSchema);
-module.exports = Post;
+postSchema.virtual('properties.popUpMarkup').get(function () {
+    return `
+    <strong><a href="/posts/${this._id}">${this.title}</a><strong>
+    <p>${this.description.substring(0, 20)}...</p>`
+});
+
+
+
+module.exports = mongoose.model('Post', postSchema);

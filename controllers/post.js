@@ -1,65 +1,66 @@
 const Post = require('../models/post');
 
-//create a new post
-exports.new = async (req, res) => {
-    try {
-        const post = new Post({
-            title: req.body.title,
-            content: req.body.content
-        });
-        
-        await post.save();
-        res.status(201).send(post);
-    } catch (error) {
-        res.status(400).send(error);
-    }
+// Display all posts
+module.exports.index = async (req, res) => {
+    const posts = await Post.find({}).populate('popupText');
+    res.render('posts/index', { posts });
 };
 
-//get all posts
-exports.getAllPosts = async (req, res) => {
-    try {
-        const posts = await Post.find();
-        res.status(200).send(posts);
-    } catch (error) {
-        res.status(500).send(error);
-    }
+// Render form to create a new post
+module.exports.renderNewForm = (req, res) => {
+    res.render('posts/new');
 };
 
-//get a single post by ID
-exports.getPostById = async (req, res) => {
-    try {
-        const post = await Post.findById(req.params.id);
-        if (!post) {
-            return res.status(404).send();
-        }
-        res.status(200).send(post);
-    } catch (error) {
-        res.status(500).send(error);
-    }
+// Create a new post
+module.exports.createPost = async (req, res, next) => {
+    const post = new Post(req.body.post);
+    post.author = req.user._id;
+    await post.save();
+    console.log(post);
+    req.flash('success', 'Successfully made a new post!');
+    res.redirect(`/posts/${post._id}`);
 };
 
-//update a post by ID
-exports.edit = async (req, res) => {
-    try {
-        const post = await Post.findByIdAndUpdate(re.params.id, req.body, { new: true, runValidators: true});
-        if (!post) {
-            return res.status(404).send();
-        }
-        res.status(200).send(post);
-    } catch (error) {
-        res.status(400).send(error);
+// Show a specific post
+module.exports.showPost = async (req, res) => {
+    const post = await Post.findById(req.params.id).populate({
+        path: 'author'
+    });
+    if (!post) {
+        req.flash('error', 'Cannot find that post!');
+        return res.redirect('/posts');
     }
+    res.render('posts/show', { post });
 };
 
-//delete a post by ID
-exports.deletePost = async (req, res) => {
-    try {
-        const post = await Post.findByIdAndDelete(req.params.id);
-        if (!post) {
-            return res.status(404).send();
-        }
-        res.status(200).send(post);
-    } catch (error) {
-        res.status(500).send(error);
+// Render edit form for a specific post
+module.exports.renderEditForm = async (req, res) => {
+    const { id } = req.params;
+    const post = await Post.findById(id);
+    if (!post) {
+        req.flash('error', 'Cannot find that post!');
+        return res.redirect('/posts');
     }
+    res.render('posts/edit', { post });
+};
+
+// Update a specific post
+module.exports.updatePost = async (req, res) => {
+    const { id } = req.params;
+    console.log(req.body);
+    const post = await Post.findByIdAndUpdate(id, { ...req.body.post }, { new: true });
+    if (!post) {
+        req.flash('error', 'Cannot find that post!');
+        return res.redirect('/posts');
+    }
+    req.flash('success', 'Successfully updated post!');
+    res.redirect(`/posts/${post._id}`);
+};
+
+// Delete a specific post
+module.exports.deletePost = async (req, res) => {
+    const { id } = req.params;
+    await Post.findByIdAndDelete(id);
+    req.flash('success', 'Successfully deleted post');
+    res.redirect('/posts');
 };

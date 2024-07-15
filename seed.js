@@ -35,9 +35,9 @@ const users = [
 ];
 
 const posts = [
-    { title: 'Post 1', body: 'Content of post 1' },
-    { title: 'Post 2', body: 'Content of post 2' },
-    { title: 'Post 3', body: 'Content of post 3' }
+    { title: 'Post 1', content: 'Content of post 1' },
+    { title: 'Post 2', content: 'Content of post 2' },
+    { title: 'Post 3', content: 'Content of post 3' }
 ];
 
 mongoose.connect('mongodb://localhost:27017/Inspire', { useNewUrlParser: true, useUnifiedTopology: true })

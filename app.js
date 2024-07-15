@@ -78,8 +78,8 @@ app.use((req, res, next) => {
   next();
 });
 
-//Routes
-app.use(postRoutes);
+// //Routes
+// app.use(postRoutes);
 
 //Define routes with Router
 const userRouter = require('./routes/user');
@@ -89,7 +89,7 @@ const blogRouter = require('./routes/blog');
 app.use('/', blogRouter);
 
 const postRouter = require('./routes/posts');
-app.use('/', postRouter);
+app.use('/posts', postRouter);
 
 // Define routes
 app.get('/', (req, res) => {
